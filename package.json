@@ -1,0 +1,36 @@
+{
+  "name": "snap-zip",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
+  "scripts": {
+    "test": "mocha -r ts-node/register ./test/*.spec.ts",
+    "pretty": "prettier --write src/*"
+  },
+  "dependencies": {
+    "crc32-ts": "^0.1.0",
+    "pako": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.12",
+    "@types/pako": "^1.0.0",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "prettier": "^1.15.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.2"
+  },
+  "prettier": {
+    "printWidth": 999,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "none",
+    "bracketSpacing": false,
+    "arrowParens": "avoid",
+    "proseWrap": "never"
+  }
+}
