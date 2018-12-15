@@ -7,6 +7,31 @@ import {WriteStream, PathLike} from 'fs'
 
 // Specification for development: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 
+/*
+ZIP structure
+[local file header 1]
+[encryption header 1]
+[file data 1]
+[data descriptor 1]
+.
+.
+.
+[local file header n]
+[encryption header n]
+[file data n]
+[data descriptor n]
+[archive decryption header]
+[archive extra data record]
+[central directory header 1]
+.
+.
+.
+[central directory header n]
+[zip64 end of central directory record]
+[zip64 end of central directory locator]
+[end of central directory record]
+*/
+
 // https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
 export function dateToFatDate(date: Date) {
   return date.getDay() | ((date.getMonth() + 1) << 5) | ((date.getFullYear() - 1980) << 9)
@@ -39,8 +64,8 @@ export function dateToFatTime(date: Date) {
 
 export function localFileHeader(buf: Buffer, date: Date, name: string, extra: string) {
   buf.writeUInt32LE(0x04034b50, 0)
-  buf.writeUInt16LE(0x0200, 4) // version needed to extract: 2.0 = DEFALTE compression
-  buf.writeUInt16LE(0b0000100000000000, 6) // general purpose big flags: 11 = name/comment UTF-8 encoded
+  buf.writeUInt16LE(0x0405, 4) // version needed to extract: 2.0 = DEFALTE compression
+  buf.writeUInt16LE(0b0000100000000000, 6) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
   buf.writeUInt16LE(0x0008, 8) // compression method: 8 = DEFLATE
   buf.writeUInt16LE(dateToFatTime(date), 10) // last modified time
   buf.writeUInt16LE(dateToFatDate(date), 12) // last modified date
@@ -53,7 +78,19 @@ export function localFileHeader(buf: Buffer, date: Date, name: string, extra: st
   buf.write(extra, 30 + name.length, extra.length, 'utf-8') // extra field
 }
 
+export function dataDescriptor(buf: Buffer, data: Buffer, dataUncompressedLength: number) {
+  buf.writeUInt32LE(0x08074b50, 0)
+  buf.writeUInt32LE(0x00000000, 4) // crc32
+  buf.writeUInt32LE(data.byteLength, 8)
+  buf.writeUInt32LE(dataUncompressedLength, 12)
+}
 
+export function archiveExtraData(buf: Buffer, extra: string) {
+  buf.writeUInt32LE(0x08064b50, 0)
+  const len = Buffer.from(extra).length // get the byte-length not the character-length
+  buf.writeUInt32LE(len, 4)
+  buf.write(extra, 8, len, 'utf-8')
+}
 
 export class Zip {
   stream: PassThrough = new PassThrough()
