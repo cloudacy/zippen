@@ -1,7 +1,7 @@
 'use strict'
 
-import { addString, Zip, end } from '../src';
-import { createWriteStream } from 'fs';
+import {addString, Zip, end} from '../src'
+import {createWriteStream} from 'fs'
 
 describe('Minimal Zip with test.txt', () => {
   const dir = './tmp'

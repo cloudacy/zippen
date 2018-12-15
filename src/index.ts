@@ -1,7 +1,7 @@
 import {PassThrough} from 'stream'
 import {deflateRaw} from 'zlib'
 import crc32 from 'crc32-ts'
-import { WriteStream, PathLike } from 'fs';
+import {WriteStream, PathLike} from 'fs'
 
 // Reference: https://github.com/thejoshwolfe/yazl/blob/master/index.js
 
@@ -55,7 +55,7 @@ export function write(zip: Zip, buffer: Buffer) {
 }
 
 export function deflate(buf: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject)=> {
+  return new Promise((resolve, reject) => {
     deflateRaw(buf, (err, res) => {
       if (err) {
         reject(err)
