@@ -88,32 +88,58 @@ All parts of the .zip file were grouped to the pieces of a .zip file. The bytes 
 
 #### local file header block
 
-| local file header signature | version needed to extract | general purpose bit flag | compression algorithm | last mod file time (MSDOS format) | last mod file date (MSDOS format) | crc-32 | compressed size | uncompressed size | file name length | extra field length | file name | extra field |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `50 4b 03 04` | `14 00` | `08 00` | `08 00` | `6b 81` | `8f 4d` | `00 00 00 00` | `00 00 00 00` | `00 00 00 00` | `07 00` | `10 00` | `61 62 63 2e 74 78 74` | `55 58 0c 00 a1 19 15 5c 9a 19 15 5c f5 01 14 00` |
+- local file header signature: `50 4b 03 04`
+- version needed to extract: `14 00`
+- general purpose bit flag: `08 00`
+- compression algorithm: `08 00`
+- last mod file time (MSDOS format): `6b 81`
+- last mod file date (MSDOS format): `8f 4d`
+- crc-32: `00 00 00 00`
+- compressed size: `00 00 00 00`
+- uncompressed size: `00 00 00 00`
+- file name length: `07 00`
+- extra field length: `10 00`
+- file name: `61 62 63 2e 74 78 74` - ASCII: `abc.txt`
 
 #### compressed data block(s)
 
-| compressed data |
-|---|
-| `4b 4c 4a e6 02 00` |
+- compressed data: `4b 4c 4a e6 02 00`
 
 #### data descriptor block(s)
 
-| data descriptor signature (unofficial) | crc-32 | compressed size | uncompressed size |
-|---|---|---|---|
-| `50 4b 07 08` | `4e 81 88 47` | `06 00 00 00` | `04 00 00 00` |
+- data descriptor signature (unofficial): `50 4b 07 08`
+- crc-32: `4e 81 88 47`
+- compressed size: `06 00 00 00`
+- uncompressed size: `04 00 00 00`
 
 #### central directory block(s)
 
-| central file header signature | version made by | version needed to extract | general purpose bit flag | compression method | last mod file time (MSDOS format) | last mod file date (MSDOS format) | crc-32 | compressed size | uncompressed size | file name length | extra field length | file comment length | disk number start | internal file attributes | external file attributes | relative offset of local header | file name | extra field |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `50 4b 01 02` | `15 03` | `14 00` | `08 00` | `08 00` | `6b 81` | `8f 4d` | `4e 81 88 47` | `06 00 00 00` | `04 00 00 00` | `07 00` | `0c 00` | `00 00` | `00 00` | `00 00` | `00 40 a4 81` | `00 00 00 00` | `61 62 63 2e 74 78 74` | `55 58 08 00 a1 19 15 5c 9a 19 15 5c` |
+- central file header signature: `50 4b 01 02`
+- version made by: `15 03`
+- version needed to extract: `14 00`
+- general purpose bit flag: `08 00`
+- compression method: `08 00`
+- last mod file time (MSDOS format): `6b 81`
+- last mod file date (MSDOS format): `8f 4d`
+- crc-32: `4e 81 88 47`
+- compressed size: `06 00 00 00`
+- uncompressed size: `04 00 00 00`
+- file name length: `07 00`
+- extra field length: `00 00`
+- file comment length: `00 00`
+- disk number start: `00 00`
+- internal file attributes: `00 00`
+- external file attributes: `00 40 a4 81`
+- relative offset of local header: `00 00 00 00`
+- file name: `61 62 63 2e 74 78 74` - ASCII: `abc.txt`
 
 #### end of central directories block
 
-| end of central directories signature | disk number | disk number | number of entries | number of entries on this disk | size of central directory block(s) | offset of central directory block(s) | comment length |
-|---|---|---|---|---|---|---|---|
-| `50 4b 05 06` | `00 00` | `00 00` | `01 00` | `01 00` | `41 00 00 00` | `4b 00 00 00` | `00 00` |
-
-
+- end of central directories signature: `50 4b 05 06`
+- disk number: `00 00`
+- disk number: `00 00`
+- number of entries: `01 00`
+- number of entries on this disk: `01 00`
+- size of central directory block(s): `41 00 00 00`
+- offset of central directory block(s): `4b 00 00 00`
+- comment length: `00 00`
