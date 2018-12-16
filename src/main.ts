@@ -2,10 +2,6 @@ import {deflateRawSync} from 'zlib'
 import crc32 from '../../crc32-ts/src/index'
 import {writeFileSync} from 'fs'
 
-// Reference: https://github.com/thejoshwolfe/yazl/blob/master/index.js
-
-// Specification for development: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-
 type ZipEntry = {
   path: string
   date: Date
@@ -19,55 +15,6 @@ const fixedLocalFileHeaderLength = 30
 const fixedDataDescriptorLength = 16
 const fixedCentralDirectoryLength = 46
 const fixedEndCentralDirectoryLength = 22
-
-/*
-hexdump of abc.zip
-           signature |vnte |bits | compr|time |date |
-00000000  50 4b 03 04|14 00|08 00| 08 00|6b 81|8f 4d|00 00  |PK........k..M..|
-                                        |nalen|exlen| file
-00000010  00 00 00 00 00 00 00 00  00 00|07 00|10 00|61 62  |..............ab|
-          name          | extra field (16 bytes)
-00000020  63 2e 74 78 74|55 58 0c  00 a1 19 15 5c 9a 19 15  |c.txtUX.....\...|
-                        |deflated file data|descr. sig.|
-00000030  5c f5 01 14 00|4b 4c 4a  e6 02 00|50 4b 07 08|4e  |\....KLJ...PK..N|
-           crc32  |comp. size |unc. size   |cfh sig.   |vm
-00000040  81 88 47|06 00 00 00|04  00 00 00|50 4b 01 02|15  |..G........PK...|
-          b |vntex|bits |compr|ti  me|date |crc32      |
-00000050  03|14 00|08 00|08 00|6b  81|8f 4d|4e 81 88 47|06  |.......k..MN..G.|
-        comp size |unc. size  |namlen|exlen|cmlen|dskn.|inatt
-00000060  00 00 00|04 00 00 00|07  00|0c 00|00 00|00 00|00  |................|
-            |ext. attr  |offset      |file name           |
-00000070  00|00 40 a4 81|00 00 00  00|61 62 63 2e 74 78 74| |..@......abc.txt|
-          extra field                         |eocd sig.  |
-00000080  55 58 08 00 a1 19 15 5c  9a 19 15 5c|50 4b 05 06  |UX.....\...\PK..|
-          dskn.|dskn.|entn.|entn.| cdsize     |socd offs. dn.
-00000090  00 00 00 00 01 00 01 00| 41 00 00 00|4b 00 00 00| |........A...K...|
-          comln|
-000000a0  00 00|                                            |..|
-000000a2
-*/
-
-/*
-ZIP structure:
-
-[local file header 1]
-[encryption header 1]
-[file data 1]
-[data descriptor 1]
-...
-[local file header n]
-[encryption header n]
-[file data n]
-[data descriptor n]
-[archive decryption header]
-[archive extra data record]
-[central directory header 1]
-...
-[central directory header n]
-[zip64 end of central directory record]
-[zip64 end of central directory locator]
-[end of central directory record]
-*/
 
 // https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
 export function dateToFatDate(date: Date) {
@@ -225,29 +172,39 @@ export class Zip {
   entries: Array<ZipEntry> = []
   offset: number = 0
 
+  // add an entry (file / directory) to the zip file
   addEntry(path: string, date: Date, data: Buffer | undefined) {
     this.entries.push({path, date, data, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).length, crc: data ? crc32(data, true) : 0})
   }
 
+  // generate a zip buffer based on all previously added entries
   build() {
+    // calculate the resulting buffer size
     let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + fixedDataDescriptorLength + fixedCentralDirectoryLength) * this.entries.length
     for (let i = 0; i < this.entries.length; i++) {
       const e: ZipEntry = this.entries[i]
       bufSize += (e.pathByteLength << 1) + (e.compressedData ? e.compressedData.byteLength : 0)
     }
 
+    // allocate a buffer based on the pre-calculated size
     this.buffer = Buffer.alloc(bufSize)
 
+    // iterate through all entries and append them to the zip buffer
     let entriesLength = 0
     for (let i = 0; i < this.entries.length; i++) {
       const e: ZipEntry = this.entries[i]
+
       this.offset += localFileHeader(this.buffer, this.offset, e.path, e.pathByteLength, e.date)
+
       if (e.compressedData) {
         e.compressedData.copy(this.buffer, this.offset, 0, e.compressedData.byteLength)
         this.offset += e.compressedData.byteLength
       }
+
       this.offset += dataDescriptor(this.buffer, this.offset, e.data, e.compressedData)
+
       const n = centralDirectory(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
+
       this.offset += n
       entriesLength += n
     }
@@ -255,6 +212,7 @@ export class Zip {
     this.offset += endCentralDirectory(this.buffer, this.offset, this.entries.length, entriesLength)
   }
 
+  // store the zip buffer to the given path
   write(path: string | number | Buffer | URL) {
     this.build()
     writeFileSync(path, this.buffer)
