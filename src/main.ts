@@ -1,22 +1,37 @@
-import {deflateRawSync, deflateRaw} from 'zlib'
+import {deflateRawSync} from 'zlib'
 import crc32 from '../../crc32-ts/src/index'
+import {writeFileSync} from 'fs'
 
 // Reference: https://github.com/thejoshwolfe/yazl/blob/master/index.js
 
 // Specification for development: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 
+type ZipEntry = {
+  path: string
+  date: Date
+  data?: Buffer // if data is set, it is a file, if not, it is a directory
+  compressedData?: Buffer
+  pathByteLength: number
+  crc: number
+}
+
+const fixedLocalFileHeaderLength = 30
+const fixedDataDescriptorLength = 16
+const fixedCentralDirectoryLength = 46
+const fixedEndCentralDirectoryLength = 22
+
 /*
 hexdump of abc.zip
            signature |vnte |bits | compr|time |date |
 00000000  50 4b 03 04|14 00|08 00| 08 00|6b 81|8f 4d|00 00  |PK........k..M..|
-                                                    | file
-00000010  00 00 00 00 00 00 00 00  00 00 07 00 10 00|61 62  |..............ab|
-          name          |
+                                        |nalen|exlen| file
+00000010  00 00 00 00 00 00 00 00  00 00|07 00|10 00|61 62  |..............ab|
+          name          | extra field (16 bytes)
 00000020  63 2e 74 78 74|55 58 0c  00 a1 19 15 5c 9a 19 15  |c.txtUX.....\...|
                         |deflated file data|descr. sig.|
 00000030  5c f5 01 14 00|4b 4c 4a  e6 02 00|50 4b 07 08|4e  |\....KLJ...PK..N|
            crc32  |comp. size |unc. size   |cfh sig.   |vm
-00000040  81|88 47|06 00 00 00|04  00 00 00|50 4b 01 02|15  |..G........PK...|
+00000040  81 88 47|06 00 00 00|04  00 00 00|50 4b 01 02|15  |..G........PK...|
           b |vntex|bits |compr|ti  me|date |crc32      |
 00000050  03|14 00|08 00|08 00|6b  81|8f 4d|4e 81 88 47|06  |.......k..MN..G.|
         comp size |unc. size  |namlen|exlen|cmlen|dskn.|inatt
@@ -81,20 +96,21 @@ export function dateToFatTime(date: Date) {
 | extra field                              | x bytes |
 +------------------------------------------+---------+
 */
-export function localFileHeader(buf: Buffer, name: string, date: Date, extra: string = '') {
-  buf.writeUInt32LE(0x04034b50, 0)
-  buf.writeUInt16LE(0x0405, 4) // version needed to extract: 2.0 = DEFALTE compression
-  buf.writeUInt16LE(0b0000100000001000, 6) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
-  buf.writeUInt16LE(0x0008, 8) // compression method: 8 = DEFLATE
-  buf.writeUInt16LE(dateToFatTime(date), 10) // last modified time
-  buf.writeUInt16LE(dateToFatDate(date), 12) // last modified date
-  buf.writeUInt32LE(0x00000000, 14) // crc-32
-  buf.writeUInt32LE(0x00000000, 18) // compressed size
-  buf.writeUInt32LE(0x00000000, 22) // uncompressed size
-  buf.writeUInt16LE(name.length, 26) // file name length
-  buf.writeUInt16LE(extra.length, 28) // extra field length
-  buf.write(name, 30, name.length, 'utf-8') // file name
-  buf.write(extra, 30 + name.length, extra.length, 'utf-8') // extra field
+export function localFileHeader(buf: Buffer, off: number, path: string, pathLength: number, date: Date) {
+  buf.writeUInt32LE(0x04034b50, off)
+  buf.writeUInt16LE(0x0405, off + 4) // version needed to extract: 2.0 = DEFALTE compression
+  buf.writeUInt16LE(0x0808, off + 6) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
+  buf.writeUInt16LE(0x0008, off + 8) // compression method: 8 = DEFLATE
+  buf.writeUInt16LE(dateToFatTime(date), off + 10) // last modified time
+  buf.writeUInt16LE(dateToFatDate(date), off + 12) // last modified date
+  buf.writeUInt32LE(0x00000000, off + 14) // crc-32 (0x0 -> will be set at data descriptor)
+  buf.writeUInt32LE(0x00000000, off + 18) // compressed size (0x0 -> will be set at data descriptor)
+  buf.writeUInt32LE(0x00000000, off + 22) // uncompressed size (0x0 -> will be set at data descriptor)
+  buf.writeUInt16LE(pathLength, off + 26) // file name length
+  buf.writeUInt16LE(0x0000, off + 28) // extra field length
+  buf.write(path, off + 30, pathLength, 'utf-8') // file name
+
+  return fixedLocalFileHeaderLength + pathLength
 }
 
 /*
@@ -107,11 +123,13 @@ data needs to be the UNCOMPRESSED content of the file to add
 | uncompressed size                   | 4 bytes |
 +-------------------------------------+---------+
 */
-export function dataDescriptor(buf: Buffer, data: Buffer, dataUncompressedLength: number) {
-  buf.writeUInt32LE(0x08074b50, 0)
-  buf.writeUInt32LE(crc32(data, true), 4) // crc32
-  buf.writeUInt32LE(data.byteLength, 8)
-  buf.writeUInt32LE(dataUncompressedLength, 12)
+export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compressedData?: Buffer) {
+  buf.writeUInt32LE(0x08074b50, off)
+  buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 4) // crc32
+  buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 8) // compressed size
+  buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 12) // uncompressed size
+
+  return fixedDataDescriptorLength
 }
 
 /*
@@ -121,12 +139,12 @@ export function dataDescriptor(buf: Buffer, data: Buffer, dataUncompressedLength
 | extra field data                          | x bytes |
 +-------------------------------------------+---------+
 */
-export function archiveExtraData(buf: Buffer, extra: string) {
+/*export function archiveExtraData(buf: Buffer, extra: string) {
   buf.writeUInt32LE(0x08064b50, 0)
   const len = Buffer.from(extra).length // get the byte-length not the character-length
   buf.writeUInt32LE(len, 4)
   buf.write(extra, 8, len, 'utf-8')
-}
+}*/
 
 /*
 +--------------------------------------------+---------+
@@ -134,6 +152,7 @@ export function archiveExtraData(buf: Buffer, extra: string) {
 | version made by                            | 2 bytes |
 | version needed to extract                  | 2 bytes |
 | general purpose bit flag                   | 2 bytes |
+| compression method                         | 2 bytes |
 | last mod file time                         | 2 bytes |
 | last mod file date                         | 2 bytes |
 | crc-32                                     | 4 bytes |
@@ -151,13 +170,27 @@ export function archiveExtraData(buf: Buffer, extra: string) {
 | file comment                               | x bytes |
 +--------------------------------------------+---------+
 */
-export function centralDirectory(buf: Buffer, date: Date) {
-  buf.writeUInt32LE(0x02014b50, 0) // central file header signature
-  buf.writeUInt16LE(0x0000, 4) // version made by: TODO
-  buf.writeUInt16LE(0x0000, 6) // version needed to extract: TODO
-  buf.writeUInt16LE(0b0000100000001000, 8) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
-  buf.writeUInt16LE(dateToFatTime(date), 10) // last mod file time
-  buf.writeUInt16LE(dateToFatDate(date), 12) // last mod file date
+export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, data?: Buffer, compressedData?: Buffer) {
+  buf.writeUInt32LE(0x02014b50, off) // central file header signature
+  buf.writeUInt16LE(0x0000, off + 4) // version made by: TODO
+  buf.writeUInt16LE(0x0000, off + 6) // version needed to extract: TODO
+  buf.writeUInt16LE(0x0808, off + 8) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
+  buf.writeUInt16LE(0x0008, off + 10) // compression method: 8 = DEFLATE
+  buf.writeUInt16LE(dateToFatTime(date), off + 12) // last mod file time
+  buf.writeUInt16LE(dateToFatDate(date), off + 14) // last mod file date
+  buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 16) // crc-32
+  buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 20) // compressed size
+  buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 24) // uncompressed size
+  buf.writeUInt16LE(pathLength, off + 28) // file name length
+  buf.writeUInt16LE(0x0000, off + 30) // extra field length
+  buf.writeUInt16LE(0x0000, off + 32) // file comment length
+  buf.writeUInt16LE(0x0000, off + 34) // disk number start
+  buf.writeUInt16LE(0x0000, off + 36) // internal file attributes
+  buf.writeUInt32LE(0x00000000, off + 38) // external file attributes
+  buf.writeUInt32LE(0x00000000, off + 42) // relative offset of local header
+  buf.write(path, off + 46, pathLength, 'utf-8') // file name
+
+  return fixedCentralDirectoryLength + pathLength
 }
 
 /*
@@ -173,47 +206,57 @@ export function centralDirectory(buf: Buffer, date: Date) {
 | .ZIP file comment                                                             | x bytes |
 +-------------------------------------------------------------------------------+---------+
 */
-export function endCentralDirectory(buf: Buffer, entryNum: number, entriesLen: number) {
-  buf.writeUInt32LE(0x06054b50, 0) // end of central dir signature
-  buf.writeUInt16LE(0x0000, 4) // number of this disk
-  buf.writeUInt16LE(0x0000, 6) // number of the disk with the start of the central directory
-  buf.writeUInt16LE(entryNum, 8) // total number of entries in the central directory on this disk
-  buf.writeUInt16LE(entryNum, 10) // total number of entries in the central directory
-  buf.writeUInt32LE(entriesLen, 12) // size of the central directory: bytelength of all the central directories summed up
-  buf.writeUInt32LE(entriesLen, 16) // offset of start of central directory with respect to the starting disk number: TODO: this is not quite correct a test zip printed 10 bytes more
-  buf.writeUInt16LE(0x0000, 20) // comment length
+export function endCentralDirectory(buf: Buffer, off: number, entryCount: number, entriesLength: number) {
+  buf.writeUInt32LE(0x06054b50, off) // end of central dir signature
+  buf.writeUInt16LE(0x0000, off + 4) // number of this disk
+  buf.writeUInt16LE(0x0000, off + 6) // number of the disk with the start of the central directory
+  buf.writeUInt16LE(entryCount, off + 8) // total number of entries in the central directory on this disk
+  buf.writeUInt16LE(entryCount, off + 10) // total number of entries in the central directory
+  buf.writeUInt32LE(entriesLength, off + 12) // size of the central directory: bytelength of all the central directories summed up
+  buf.writeUInt32LE(entriesLength, off + 16) // offset of start of central directory with respect to the starting disk number: TODO: this is not quite correct a test zip printed 10 bytes more
+  buf.writeUInt16LE(0x0000, off + 20) // comment length
   // no comment
+
+  return fixedEndCentralDirectoryLength
 }
 
-const fixedLocalFileHeaderLength = 30
-const fixedDataDescriptorLength = 16
-const fixedCentralDirectoryLength = 44
-
 export class Zip {
-  entries: Array<Entry> = []
+  buffer: Buffer
+  entries: Array<ZipEntry> = []
+  offset: number = 0
 
-  addEntry(path: string, data: Buffer, directory: boolean) {
-    this.entries.push(new Entry(path, data, directory))
+  addEntry(path: string, date: Date, data: Buffer | undefined) {
+    this.entries.push({path, date, data, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).length, crc: data ? crc32(data, true) : 0})
   }
 
   build() {
-
-    /*for (const e of this.entries) {
-
-    }*/
-  }
-}
-
-export class Entry {
-  path: string
-  data: Buffer
-  compressedData: Buffer
-
-  constructor(path: string, data: Buffer, directory: boolean) {
-    this.path = path
-    this.data = data
-    if (directory) {
-      this.compressedData = deflateRawSync(data)
+    let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + fixedDataDescriptorLength + fixedCentralDirectoryLength) * this.entries.length
+    for (let i = 0; i < this.entries.length; i++) {
+      const e: ZipEntry = this.entries[i]
+      bufSize += (e.pathByteLength << 1) + (e.compressedData ? e.compressedData.byteLength : 0)
     }
+
+    this.buffer = Buffer.alloc(bufSize)
+
+    let entriesLength = 0
+    for (let i = 0; i < this.entries.length; i++) {
+      const e: ZipEntry = this.entries[i]
+      this.offset += localFileHeader(this.buffer, this.offset, e.path, e.pathByteLength, e.date)
+      if (e.compressedData) {
+        e.compressedData.copy(this.buffer, this.offset, 0, e.compressedData.byteLength)
+        this.offset += e.compressedData.byteLength
+      }
+      this.offset += dataDescriptor(this.buffer, this.offset, e.data, e.compressedData)
+      const n = centralDirectory(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
+      this.offset += n
+      entriesLength += n
+    }
+
+    this.offset += endCentralDirectory(this.buffer, this.offset, this.entries.length, entriesLength)
+  }
+
+  write(path: string | number | Buffer | URL) {
+    this.build()
+    writeFileSync(path, this.buffer)
   }
 }
