@@ -172,11 +172,19 @@ export class Zip {
   entries: Array<ZipEntry> = []
   offset: number = 0
 
+  /**
+   * add an entry (file / directory) to the zip file
+   * @param path e.g. docProps/app.xml
+   * @param data 
+   * @param date 
+   */
   addEntry(path: string, data: Buffer | undefined, date: Date = new Date()) {
     this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).length, crc: data ? crc32(data, true) : 0})
   }
 
-  // generate a zip buffer based on all previously added entries
+  /**
+   * generate a zip buffer based on all previously added entries
+   */
   build() {
     // calculate the resulting buffer size
     let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + fixedDataDescriptorLength + fixedCentralDirectoryLength) * this.entries.length
@@ -211,7 +219,10 @@ export class Zip {
     this.offset += endCentralDirectory(this.buffer, this.offset, this.entries.length, entriesLength)
   }
 
-  // store the zip buffer to the given path
+  /**
+   * store the zip buffer to the given path
+   * @param path 
+   */
   write(path: string | number | Buffer | URL) {
     this.build()
     writeFileSync(path, this.buffer)
