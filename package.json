@@ -1,6 +1,6 @@
 {
   "name": "zippen",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
   "main": "dist/main.js",
