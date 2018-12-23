@@ -1,6 +1,6 @@
 # snap zip
 
-`snap-zip` is a small and easy to use zip generator. It can be used to pack multiple files / buffers into one .zip file / buffer.
+`zippen` is a small and easy to use zip generator. It can be used to pack multiple files / buffers into one .zip file / buffer.
 
 This package was built based on the [**pkware .ZIP File Format Specification**](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT).
 
@@ -10,12 +10,12 @@ This package was built based on the [**pkware .ZIP File Format Specification**](
 
 #### commonjs
 ```javascript
-const Zip = require('snap-zip').Zip
+const Zip = require('zippen').Zip
 ```
 
 #### es6 module
 ```javascript
-import {Zip} from 'snap-zip'
+import {Zip} from 'zippen'
 ```
 
 ### create zip object
