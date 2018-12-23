@@ -217,6 +217,8 @@ export class Zip {
     }
 
     this.offset += endCentralDirectory(this.buffer, this.offset, this.entries.length, entriesLength)
+
+    return this.buffer
   }
 
   /**
