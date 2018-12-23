@@ -43,16 +43,16 @@ export function dateToFatTime(date: Date) {
 | extra field                              | x bytes |
 +------------------------------------------+---------+
 */
-export function localFileHeader(buf: Buffer, off: number, path: string, pathLength: number, date: Date) {
+export function localFileHeader(buf: Buffer, off: number, path: string, pathLength: number, date: Date, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x04034b50, off)
-  buf.writeUInt16LE(0x0405, off + 4) // version needed to extract: 2.0 = DEFALTE compression
-  buf.writeUInt16LE(0x0808, off + 6) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
+  buf.writeUInt16LE(0x0014, off + 4) // version needed to extract: 2.0 = DEFLATE compression
+  buf.writeUInt16LE(0x0000, off + 6) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
   buf.writeUInt16LE(0x0008, off + 8) // compression method: 8 = DEFLATE
   buf.writeUInt16LE(dateToFatTime(date), off + 10) // last modified time
   buf.writeUInt16LE(dateToFatDate(date), off + 12) // last modified date
-  buf.writeUInt32LE(0x00000000, off + 14) // crc-32 (0x0 -> will be set at data descriptor)
-  buf.writeUInt32LE(0x00000000, off + 18) // compressed size (0x0 -> will be set at data descriptor)
-  buf.writeUInt32LE(0x00000000, off + 22) // uncompressed size (0x0 -> will be set at data descriptor)
+  buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 14) // crc-32 (0x0 -> will be set at data descriptor)
+  buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 18) // compressed size (0x0 -> will be set at data descriptor)
+  buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 22) // uncompressed size (0x0 -> will be set at data descriptor)
   buf.writeUInt16LE(pathLength, off + 26) // file name length
   buf.writeUInt16LE(0x0000, off + 28) // extra field length
   buf.write(path, off + 30, pathLength, 'utf-8') // file name
@@ -201,7 +201,7 @@ export class Zip {
     for (let i = 0; i < this.entries.length; i++) {
       const e: ZipEntry = this.entries[i]
 
-      this.offset += localFileHeader(this.buffer, this.offset, e.path, e.pathByteLength, e.date)
+      this.offset += localFileHeader(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
 
       if (e.compressedData) {
         e.compressedData.copy(this.buffer, this.offset, 0, e.compressedData.byteLength)
