@@ -172,9 +172,8 @@ export class Zip {
   entries: Array<ZipEntry> = []
   offset: number = 0
 
-  // add an entry (file / directory) to the zip file
-  addEntry(path: string, date: Date, data: Buffer | undefined) {
-    this.entries.push({path, date, data, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).length, crc: data ? crc32(data, true) : 0})
+  addEntry(path: string, data: Buffer | undefined, date: Date = new Date()) {
+    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).length, crc: data ? crc32(data, true) : 0})
   }
 
   // generate a zip buffer based on all previously added entries
