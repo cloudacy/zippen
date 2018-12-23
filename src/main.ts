@@ -179,7 +179,7 @@ export class Zip {
    * @param date 
    */
   addEntry(path: string, data: Buffer | undefined, date: Date = new Date()) {
-    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).length, crc: data ? crc32(data, true) : 0})
+    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data, true) : 0})
   }
 
   /**
