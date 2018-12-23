@@ -3,6 +3,8 @@
   "version": "0.1.1",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "mocha -r ts-node/register ./test/*.spec.ts",
