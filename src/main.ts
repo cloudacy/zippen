@@ -1,5 +1,5 @@
 import {deflateRawSync} from 'zlib'
-import crc32 from '../../crc32-ts/src/index'
+import crc32 from 'crc32-ts'
 import {writeFileSync} from 'fs'
 
 type ZipEntry = {
