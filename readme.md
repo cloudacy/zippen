@@ -1,4 +1,4 @@
-# snap zip
+# zippen
 
 `zippen` is a small and easy to use zip generator. It can be used to pack multiple files / buffers into one .zip file / buffer.
 

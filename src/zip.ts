@@ -16,13 +16,25 @@ const fixedDataDescriptorLength = 16
 const fixedCentralDirectoryLength = 46
 const fixedEndCentralDirectoryLength = 22
 
-// https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
-export function dateToFatDate(date: Date) {
+/**
+ * Encodes given date to a the MSDOS Date format.
+ * Details: https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
+ *
+ * @param date The date object to be encoded
+ * @returns Encoded date of the given date object
+ */
+export function dateToFatDate(date: Date): number {
   return date.getDate() | ((date.getMonth() + 1) << 5) | ((date.getFullYear() - 1980) << 9)
 }
 
-// https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
-export function dateToFatTime(date: Date) {
+/**
+ * Encodes given date to the MSDOS Time format.
+ * Details: https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
+ *
+ * @param date The date object to be encoded
+ * @returns Encoded time of the given date object
+ */
+export function dateToFatTime(date: Date): number {
   return (date.getSeconds() >> 1) | (date.getMinutes() << 5) | (date.getHours() << 11)
 }
 
@@ -43,9 +55,20 @@ export function dateToFatTime(date: Date) {
 | extra field                              | x bytes |
 +------------------------------------------+---------+
 */
+/**
+ * Writes a local file header entry to the given buffer (buf) at offset (off) with given parameters.
+ *
+ * @param buf The buffer, on which the local file header will be written on
+ * @param off Starting byte offset to use to write the local file header
+ * @param path Relative path of the file (including directories, filename, file extension, ...) - e.g. foo/bar.txt
+ * @param pathLength The BYTElength of the given path
+ * @param date Last modification date and time
+ * @param data A buffer holding ONLY the uncompressed data
+ * @param compressedData A buffer holding ONLY the compressed data
+ */
 export function localFileHeader(buf: Buffer, off: number, path: string, pathLength: number, date: Date, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x04034b50, off)
-  buf.writeUInt16LE(0x0014, off + 4) // version needed to extract: 2.0 = DEFLATE compression
+  buf.writeUInt16LE(20, off + 4) // version needed to extract: 2.0 = DEFLATE compression
   buf.writeUInt16LE(0x0000, off + 6) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
   buf.writeUInt16LE(0x0008, off + 8) // compression method: 8 = DEFLATE
   buf.writeUInt16LE(dateToFatTime(date), off + 10) // last modified time
@@ -70,6 +93,14 @@ data needs to be the UNCOMPRESSED content of the file to add
 | uncompressed size                   | 4 bytes |
 +-------------------------------------+---------+
 */
+/**
+ * Writes a data descriptor entry to the given buffer (buf) at offset (off) with given parameters.
+ *
+ * @param buf The buffer, on which the local file header will be written on
+ * @param off Starting byte offset to use to write the local file header
+ * @param data A buffer holding ONLY the uncompressed data
+ * @param compressedData A buffer holding ONLY the compressed data
+ */
 export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x08074b50, off)
   buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 4) // crc32
@@ -117,6 +148,17 @@ export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compress
 | file comment                               | x bytes |
 +--------------------------------------------+---------+
 */
+/**
+ * Writes a central directory entry to the given buffer (buf) at offset (off) with given parameters.
+ *
+ * @param buf The buffer, on which the local file header will be written on
+ * @param off Starting byte offset to use to write the local file header
+ * @param path Relative path of the file (including directories, filename, file extension, ...) - e.g. foo/bar.txt
+ * @param pathLength The BYTElength of the given path
+ * @param date Last modification date and time
+ * @param data A buffer holding ONLY the uncompressed data
+ * @param compressedData A buffer holding ONLY the compressed data
+ */
 export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x02014b50, off) // central file header signature
   buf.writeUInt16LE(0x0000, off + 4) // version made by: TODO
@@ -153,6 +195,14 @@ export function centralDirectory(buf: Buffer, off: number, path: string, pathLen
 | .ZIP file comment                                                             | x bytes |
 +-------------------------------------------------------------------------------+---------+
 */
+/**
+ * Writes an end of central directory entry to the given buffer (buf) at offset (off) with given parameters.
+ *
+ * @param buf The buffer, on which the local file header will be written on
+ * @param off Starting byte offset to use to write the local file header
+ * @param entryCount The total number of entries stored in the zip container
+ * @param entriesLength TODO
+ */
 export function endCentralDirectory(buf: Buffer, off: number, entryCount: number, entriesLength: number) {
   buf.writeUInt32LE(0x06054b50, off) // end of central dir signature
   buf.writeUInt16LE(0x0000, off + 4) // number of this disk
@@ -173,19 +223,22 @@ export class Zip {
   offset: number = 0
 
   /**
-   * add an entry (file / directory) to the zip file
-   * @param path e.g. docProps/app.xml
-   * @param data 
-   * @param date 
+   * Add an entry (file / directory) to the zip file
+   *
+   * @param path Relative path of the file (including directories, filename, file extension, ...) - e.g. foo/bar.txt
+   * @param data A buffer holding ONLY the uncompressed data
+   * @param date Last modification date and time
    */
-  addEntry(path: string, data: Buffer | undefined, date: Date = new Date()) {
+  addEntry(path: string, date: Date, data: Buffer | undefined) {
     this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data, true) : 0})
   }
 
   /**
-   * generate a zip buffer based on all previously added entries
+   * Generate a zip buffer based on all previously added entries
+   *
+   * @returns Buffer holding the final zip file
    */
-  build() {
+  build(): Buffer {
     // calculate the resulting buffer size
     let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + fixedDataDescriptorLength + fixedCentralDirectoryLength) * this.entries.length
     for (let i = 0; i < this.entries.length; i++) {
@@ -222,11 +275,11 @@ export class Zip {
   }
 
   /**
-   * store the zip buffer to the given path
-   * @param path 
+   * Store the zip buffer to the given path
+   *
+   * @param path Path where the new zip file should be stored
    */
   write(path: string | number | Buffer | URL) {
-    this.build()
-    writeFileSync(path, this.buffer)
+    writeFileSync(path, this.build())
   }
 }
