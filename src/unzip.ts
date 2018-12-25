@@ -56,6 +56,7 @@ export function debugLocalFileHeader(buf: Buffer, off: number) {
   console.log('  - CRC-32:', '0x' + r.toString(16))
 
   r = buf.readUInt32LE(off)
+  const dataSize = r
   off += 4
   console.log('  - Compressed size:', r)
 
@@ -76,9 +77,15 @@ export function debugLocalFileHeader(buf: Buffer, off: number) {
   off += nameLength
 
   console.log('  - Extra field:', '0x' + buf.toString('hex', off, off + r))
+  //for (let off2 = off; off2 < off + r;) {
+  //  console.log('    - Header:', buf.readUInt16LE(off))
+  //  off2 += 2
+  //  console.log('    - Body:', )
+  //}
+
   off += r
 
-  return off
+  return off + dataSize
 }
 
 /*
@@ -98,7 +105,7 @@ export function debugDataDescriptor(buf: Buffer, off: number) {
 
   r = buf.readUInt32LE(off)
   off += 4
-  console.log('  - CRC-32:', r)
+  console.log('  - CRC-32:', '0x' + r.toString(16))
 
   r = buf.readUInt32LE(off)
   off += 4
