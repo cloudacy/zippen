@@ -161,9 +161,9 @@ export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compress
  */
 export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x02014b50, off) // central file header signature
-  buf.writeUInt16LE(0x0000, off + 4) // version made by: TODO
-  buf.writeUInt16LE(0x0000, off + 6) // version needed to extract: TODO
-  buf.writeUInt16LE(0x0808, off + 8) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
+  buf.writeUInt16LE(45, off + 4) // version made by: TODO
+  buf.writeUInt16LE(20, off + 6) // version needed to extract: 2.0 = DEFLATE compression
+  buf.writeUInt16LE(0x0000, off + 8) // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
   buf.writeUInt16LE(0x0008, off + 10) // compression method: 8 = DEFLATE
   buf.writeUInt16LE(dateToFatTime(date), off + 12) // last mod file time
   buf.writeUInt16LE(dateToFatDate(date), off + 14) // last mod file date
@@ -240,7 +240,7 @@ export class Zip {
    */
   build(): Buffer {
     // calculate the resulting buffer size
-    let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + fixedDataDescriptorLength + fixedCentralDirectoryLength) * this.entries.length
+    let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + /*fixedDataDescriptorLength*/ + fixedCentralDirectoryLength) * this.entries.length
     for (let i = 0; i < this.entries.length; i++) {
       const e: ZipEntry = this.entries[i]
       bufSize += (e.pathByteLength << 1) + (e.compressedData ? e.compressedData.byteLength : 0)
@@ -261,7 +261,7 @@ export class Zip {
         this.offset += e.compressedData.byteLength
       }
 
-      this.offset += dataDescriptor(this.buffer, this.offset, e.data, e.compressedData)
+      //this.offset += dataDescriptor(this.buffer, this.offset, e.data, e.compressedData)
 
       const n = centralDirectory(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
 

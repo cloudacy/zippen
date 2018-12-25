@@ -171,16 +171,16 @@ export function debugCentralDirectory(buf: Buffer, off: number) {
   console.log('  - Compression method:', '0x' + r.toString(16))
 
   r = buf.readUInt16LE(off)
+  const fatTime = r
   off += 2
-  console.log('  - Last modification time:', r)
 
   r = buf.readUInt16LE(off)
   off += 2
-  console.log('  - Last modification date:', r)
+  console.log('  - Last modification date:', fatDateTimeToJsDate(r, fatTime))
 
   r = buf.readUInt32LE(off)
   off += 4
-  console.log('  - CRC-32:', r)
+  console.log('  - CRC-32:', '0x' + r.toString(16))
 
   r = buf.readUInt32LE(off)
   off += 4
