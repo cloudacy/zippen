@@ -203,14 +203,14 @@ export function centralDirectory(buf: Buffer, off: number, path: string, pathLen
  * @param entryCount The total number of entries stored in the zip container
  * @param entriesLength TODO
  */
-export function endCentralDirectory(buf: Buffer, off: number, entryCount: number, entriesLength: number) {
+export function endCentralDirectory(buf: Buffer, off: number, entries: ZipEntry[], entriesLength: number) {
   buf.writeUInt32LE(0x06054b50, off) // end of central dir signature
   buf.writeUInt16LE(0x0000, off + 4) // number of this disk
   buf.writeUInt16LE(0x0000, off + 6) // number of the disk with the start of the central directory
-  buf.writeUInt16LE(entryCount, off + 8) // total number of entries in the central directory on this disk
-  buf.writeUInt16LE(entryCount, off + 10) // total number of entries in the central directory
+  buf.writeUInt16LE(entries.length, off + 8) // total number of entries in the central directory on this disk
+  buf.writeUInt16LE(entries.length, off + 10) // total number of entries in the central directory
   buf.writeUInt32LE(entriesLength, off + 12) // size of the central directory: bytelength of all the central directories summed up
-  buf.writeUInt32LE(entriesLength, off + 16) // offset of start of central directory with respect to the starting disk number: TODO: this is not quite correct a test zip printed 10 bytes more
+  buf.writeUInt32LE(entries.length * fixedLocalFileHeaderLength + entries.reduce((acc, e) => acc + (e.compressedData ? e.compressedData.byteLength : 0) + entries.reduce((acc, e) => acc + e.pathByteLength, 0), 0), off + 16) // offset of start of central directory with respect to the starting disk number: TODO: this is not quite correct a test zip printed 10 bytes more
   buf.writeUInt16LE(0x0000, off + 20) // comment length
   // no comment
 
@@ -269,7 +269,7 @@ export class Zip {
       entriesLength += n
     }
 
-    this.offset += endCentralDirectory(this.buffer, this.offset, this.entries.length, entriesLength)
+    this.offset += endCentralDirectory(this.buffer, this.offset, this.entries, entriesLength)
 
     return this.buffer
   }
