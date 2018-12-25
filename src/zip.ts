@@ -9,6 +9,7 @@ type ZipEntry = {
   compressedData?: Buffer
   pathByteLength: number
   crc: number
+  localFileHeaderOffset: number
 }
 
 const fixedLocalFileHeaderLength = 30
@@ -159,7 +160,7 @@ export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compress
  * @param data A buffer holding ONLY the uncompressed data
  * @param compressedData A buffer holding ONLY the compressed data
  */
-export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, data?: Buffer, compressedData?: Buffer) {
+export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, localFileHeaderOffset: number, data?: Buffer,  compressedData?: Buffer) {
   buf.writeUInt32LE(0x02014b50, off) // central file header signature
   buf.writeUInt16LE(45, off + 4) // version made by: TODO
   buf.writeUInt16LE(20, off + 6) // version needed to extract: 2.0 = DEFLATE compression
@@ -176,7 +177,7 @@ export function centralDirectory(buf: Buffer, off: number, path: string, pathLen
   buf.writeUInt16LE(0x0000, off + 34) // disk number start
   buf.writeUInt16LE(0x0000, off + 36) // internal file attributes
   buf.writeUInt32LE(0x00000000, off + 38) // external file attributes
-  buf.writeUInt32LE(0x00000000, off + 42) // relative offset of local header
+  buf.writeUInt32LE(localFileHeaderOffset, off + 42) // relative offset of local header
   buf.write(path, off + 46, pathLength, 'utf-8') // file name
 
   return fixedCentralDirectoryLength + pathLength
@@ -210,7 +211,7 @@ export function endCentralDirectory(buf: Buffer, off: number, entries: ZipEntry[
   buf.writeUInt16LE(entries.length, off + 8) // total number of entries in the central directory on this disk
   buf.writeUInt16LE(entries.length, off + 10) // total number of entries in the central directory
   buf.writeUInt32LE(entriesLength, off + 12) // size of the central directory: bytelength of all the central directories summed up
-  buf.writeUInt32LE(entries.length * fixedLocalFileHeaderLength + entries.reduce((acc, e) => acc + (e.compressedData ? e.compressedData.byteLength : 0) + entries.reduce((acc, e) => acc + e.pathByteLength, 0), 0), off + 16) // offset of start of central directory with respect to the starting disk number: TODO: this is not quite correct a test zip printed 10 bytes more
+  buf.writeUInt32LE(entries.length * fixedLocalFileHeaderLength + entries.reduce((acc, e) => acc + (e.compressedData ? e.compressedData.byteLength : 0), 0) + entries.reduce((acc, e) => acc + e.pathByteLength, 0), off + 16) // offset of start of central directory with respect to the starting disk number: TODO: this is not quite correct a test zip printed 10 bytes more
   buf.writeUInt16LE(0x0000, off + 20) // comment length
   // no comment
 
@@ -230,7 +231,7 @@ export class Zip {
    * @param date Last modification date and time
    */
   addEntry(path: string, date: Date, data: Buffer | undefined) {
-    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data, true) : 0})
+    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data, true) : 0, localFileHeaderOffset: 0})
   }
 
   /**
@@ -250,11 +251,12 @@ export class Zip {
     this.buffer = Buffer.alloc(bufSize)
 
     // iterate through all entries and append them to the zip buffer
-    let entriesLength = 0
     for (let i = 0; i < this.entries.length; i++) {
       const e: ZipEntry = this.entries[i]
 
-      this.offset += localFileHeader(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
+      const n = localFileHeader(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
+      e.localFileHeaderOffset = this.offset
+      this.offset += n
 
       if (e.compressedData) {
         e.compressedData.copy(this.buffer, this.offset, 0, e.compressedData.byteLength)
@@ -262,8 +264,13 @@ export class Zip {
       }
 
       //this.offset += dataDescriptor(this.buffer, this.offset, e.data, e.compressedData)
+    }
 
-      const n = centralDirectory(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.data, e.compressedData)
+    let entriesLength = 0
+    for (let i = 0; i < this.entries.length; i++) {
+      const e: ZipEntry = this.entries[i]
+
+      const n = centralDirectory(this.buffer, this.offset, e.path, e.pathByteLength, e.date, e.localFileHeaderOffset, e.data, e.compressedData)
 
       this.offset += n
       entriesLength += n
