@@ -1,6 +1,6 @@
 {
   "name": "zippen",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
   "main": "dist/zip.js",
@@ -12,7 +12,7 @@
     "pretty": "prettier --write '*.{ts,json}' 'src/**/*.ts' 'test/**/*.ts'"
   },
   "dependencies": {
-    "crc32-ts": "^1.0.2"
+    "crc32-ts": "^1.0.3"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
