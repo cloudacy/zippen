@@ -1,23 +1,21 @@
 'use strict'
 
 import {Zip} from '../src/zip'
-import {debug} from '../src/unzip'
-import {readFileSync} from 'fs'
+import {unzip} from '../src/unzip'
 
-describe('zip generation', () => {
+describe('zipping', () => {
   it('creates a simple Zip file', () => {
     const zip = new Zip()
-    zip.addEntry('abc.txt', new Date(), readFileSync('abc.txt'))
-    zip.addEntry('def.txt', new Date(), readFileSync('def.txt'))
-    zip.write('abc-t.zip')
+    zip.addEntry('foo.txt', new Date(), Buffer.from('foo'))
+    zip.addEntry('bar.txt', new Date(), Buffer.from('bar'))
+    zip.build()
   })
 })
 
-describe('zip debugging', () => {
-  it('debugs a zip file', () => {
-    const b: Buffer = readFileSync('abc-t.zip')
-    debug(b)
-    const b2: Buffer = readFileSync('abc.zip')
-    debug(b2)
+describe('unzipping', () => {
+  it('unzips a zip file', () => {
+    const zip = new Zip()
+    zip.addEntry('foo.txt', new Date(), Buffer.from('foo'))
+    unzip(zip.build())
   })
 })

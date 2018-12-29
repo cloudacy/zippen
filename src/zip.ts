@@ -2,7 +2,7 @@ import {deflateRawSync} from 'zlib'
 import crc32 from 'crc32-ts'
 import {writeFileSync} from 'fs'
 
-type ZipEntry = {
+export type ZipEntry = {
   path: string
   date: Date
   data?: Buffer // if data is set, it is a file, if not, it is a directory
