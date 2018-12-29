@@ -77,10 +77,10 @@ concat-map@0.0.1:
   resolved "https://averi.at:4873/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
 
-crc32-ts@^1.0.2:
-  version "1.0.2"
-  resolved "https://averi.at:4873/crc32-ts/-/crc32-ts-1.0.2.tgz#800aec26df381d4d978619e2ae2462a39acda806"
-  integrity sha512-vn3XLHFgFNCseOqYhU4ZcK6SqMPEkoj87TQ2Ez1cvdoGbg9upi7s4fCvy5aJqbcTWvSLs8a637k9hBWnY1xcrQ==
+crc32-ts@^1.0.3:
+  version "1.0.3"
+  resolved "https://averi.at:4873/crc32-ts/-/crc32-ts-1.0.3.tgz#4c34dec3d12e86b91168d8b63738dba6d9deb698"
+  integrity sha512-+z6pndODsoFbS8gwUTfEGb9YEWbz1/Efxob97sd1XgXHkWuwVKHuTkj5CVAAkjUolqFhhnCPN11EJID+lPLpzA==
 
 debug@3.1.0:
   version "3.1.0"
