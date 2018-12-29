@@ -5,6 +5,7 @@
   "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
   "main": "dist/zip.js",
   "types": "dist/zip.d.ts",
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "mocha -r ts-node/register ./test/*.spec.ts",
