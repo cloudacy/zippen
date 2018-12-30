@@ -3,11 +3,12 @@
   "version": "1.0.1",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
-  "main": "dist/zip.js",
-  "types": "dist/zip.d.ts",
+  "main": "dist/commonjs/index.js",
+  "module": "dist/es6/index.js",
+  "types": "dist/es6/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -m ES6 --outDir dist/es6 && tsc -m commonjs --outDir dist/commonjs",
     "test": "mocha -r ts-node/register ./test/*.spec.ts",
     "pretty": "prettier --write '*.{ts,json}' 'src/**/*.ts' 'test/**/*.ts'"
   },

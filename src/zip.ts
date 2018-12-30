@@ -1,3 +1,5 @@
+'use strict'
+
 import {deflateRawSync} from 'zlib'
 import crc32 from 'crc32-ts'
 import {writeFileSync} from 'fs'
@@ -160,7 +162,7 @@ export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compress
  * @param data A buffer holding ONLY the uncompressed data
  * @param compressedData A buffer holding ONLY the compressed data
  */
-export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, localFileHeaderOffset: number, data?: Buffer,  compressedData?: Buffer) {
+export function centralDirectory(buf: Buffer, off: number, path: string, pathLength: number, date: Date, localFileHeaderOffset: number, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x02014b50, off) // central file header signature
   buf.writeUInt16LE(45, off + 4) // version made by: TODO
   buf.writeUInt16LE(20, off + 6) // version needed to extract: 2.0 = DEFLATE compression
@@ -218,7 +220,7 @@ export function endCentralDirectory(buf: Buffer, off: number, entries: ZipEntry[
   return fixedEndCentralDirectoryLength
 }
 
-export class Zip {
+export default class Zip {
   buffer: Buffer
   entries: Array<ZipEntry> = []
   offset: number = 0
@@ -241,7 +243,7 @@ export class Zip {
    */
   build(): Buffer {
     // calculate the resulting buffer size
-    let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + /*fixedDataDescriptorLength*/ + fixedCentralDirectoryLength) * this.entries.length
+    let bufSize = fixedEndCentralDirectoryLength + (fixedLocalFileHeaderLength + /*fixedDataDescriptorLength*/ +fixedCentralDirectoryLength) * this.entries.length
     for (let i = 0; i < this.entries.length; i++) {
       const e: ZipEntry = this.entries[i]
       bufSize += (e.pathByteLength << 1) + (e.compressedData ? e.compressedData.byteLength : 0)
