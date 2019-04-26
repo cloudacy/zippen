@@ -2,7 +2,7 @@
 
 import {inflateRawSync} from 'zlib'
 
-import Zip from './zip'
+import {Zip} from './zip'
 
 export function fatDateTimeToJsDate(date: number, time: number): Date {
   return new Date(((date & 0xfe00) >> 9) + 1980, ((date & 0x01e0) >> 5) - 1, date & 0x001f, (time & 0xf800) >> 11, (time & 0x07e0) >> 5, (time & 0x001f) << 1)
@@ -89,7 +89,7 @@ export function unzipEntry(zip: Zip, buf: Buffer, off: number): number {
   return off + comprDataSize
 }
 
-export default function unzip(buf: Buffer): Zip {
+export function unzip(buf: Buffer): Zip {
   const zip = new Zip()
   let off: number = 0
   let r: number = 0

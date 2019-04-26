@@ -220,7 +220,7 @@ export function endCentralDirectory(buf: Buffer, off: number, entries: ZipEntry[
   return fixedEndCentralDirectoryLength
 }
 
-export default class Zip {
+export class Zip {
   buffer: Buffer
   entries: Array<ZipEntry> = []
   offset: number = 0

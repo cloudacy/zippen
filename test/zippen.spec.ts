@@ -3,8 +3,8 @@
 import {inflateRawSync, deflateRawSync} from 'zlib'
 import {expect} from 'chai'
 
-import Zip from '../src/zip'
-import unzip from '../src/unzip'
+import {Zip} from '../src/zip'
+import {unzip} from '../src/unzip'
 
 describe('zipping', () => {
   it('deflates and inflates buffers', () => {
