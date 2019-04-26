@@ -1,6 +1,6 @@
 {
   "name": "zippen",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
   "main": "dist/commonjs/index.js",
