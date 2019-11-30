@@ -7,6 +7,9 @@
   "module": "dist/es6/index.js",
   "types": "dist/es6/index.d.ts",
   "sideEffects": false,
+  "publishConfig": {
+    "registry": "https://cpm.cloudacy.io"
+  },
   "scripts": {
     "build": "tsc -m ES6 --outDir dist/es6 && tsc -m commonjs --outDir dist/commonjs",
     "test": "mocha -r ts-node/register ./test/*.spec.ts",
