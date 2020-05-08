@@ -2,7 +2,7 @@
   "name": "zippen",
   "version": "1.0.5",
   "license": "MIT",
-  "author": "Dominik Kuen <d.kuen@averi.at>, Patrick Kuen <p.kuen@averi.at>",
+  "author": "Dominik Kuen <d.kuen@cloudacy.com>, Patrick Kuen <p.kuen@cloudacy.com>",
   "main": "dist/commonjs/index.js",
   "module": "dist/es6/index.js",
   "types": "dist/es6/index.d.ts",
