@@ -16,7 +16,7 @@
     "pretty": "prettier --write '*.{ts,json}' 'src/**/*.ts' 'test/**/*.ts'"
   },
   "dependencies": {
-    "crc32-ts": "^1.0.5"
+    "crc32-ts": "github:cloudacy/crc32-ts"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
