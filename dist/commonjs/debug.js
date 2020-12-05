@@ -1,5 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.debug = exports.debugEndOfCentralDirectory = exports.debugCentralDirectory = exports.debugDataDescriptor = exports.debugLocalFileHeader = void 0;
 const unzip_1 = require("./unzip");
 /*
 +------------------------------------------+---------+

@@ -1,5 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.unzip = exports.unzipEntry = exports.fatDateTimeToJsDate = void 0;
 const zlib_1 = require("zlib");
 const zip_1 = require("./zip");
 function fatDateTimeToJsDate(date, time) {
