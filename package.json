@@ -1,6 +1,6 @@
 {
   "name": "zippen",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@cloudacy.com>, Patrick Kuen <p.kuen@cloudacy.com>",
   "main": "dist/commonjs/index.js",
