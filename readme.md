@@ -10,12 +10,12 @@ This package was built based on the [**pkware .ZIP File Format Specification**](
 
 #### commonjs
 ```javascript
-const Zip = require('zippen').default
+const Zip = require('zippen').Zip
 ```
 
 #### es6 module
 ```javascript
-import Zip from 'zippen'
+import {Zip} from 'zippen'
 ```
 
 ### create zip object
