@@ -65,7 +65,7 @@ function localFileHeader(buf, off, path, pathLength, date, data, compressedData)
     buf.writeUInt16LE(0x0008, off + 8); // compression method: 8 = DEFLATE
     buf.writeUInt16LE(dateToFatTime(date), off + 10); // last modified time
     buf.writeUInt16LE(dateToFatDate(date), off + 12); // last modified date
-    buf.writeUInt32LE(data ? crc32_ts_1.default(data, true) : 0x00000000, off + 14); // crc-32 (0x0 -> will be set at data descriptor)
+    buf.writeUInt32LE(data ? (0, crc32_ts_1.default)(data, true) : 0x00000000, off + 14); // crc-32 (0x0 -> will be set at data descriptor)
     buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 18); // compressed size (0x0 -> will be set at data descriptor)
     buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 22); // uncompressed size (0x0 -> will be set at data descriptor)
     buf.writeUInt16LE(pathLength, off + 26); // file name length
@@ -94,7 +94,7 @@ data needs to be the UNCOMPRESSED content of the file to add
  */
 function dataDescriptor(buf, off, data, compressedData) {
     buf.writeUInt32LE(0x08074b50, off);
-    buf.writeUInt32LE(data ? crc32_ts_1.default(data, true) : 0x00000000, off + 4); // crc32
+    buf.writeUInt32LE(data ? (0, crc32_ts_1.default)(data, true) : 0x00000000, off + 4); // crc32
     buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 8); // compressed size
     buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 12); // uncompressed size
     return fixedDataDescriptorLength;
@@ -156,7 +156,7 @@ function centralDirectory(buf, off, path, pathLength, date, localFileHeaderOffse
     buf.writeUInt16LE(0x0008, off + 10); // compression method: 8 = DEFLATE
     buf.writeUInt16LE(dateToFatTime(date), off + 12); // last mod file time
     buf.writeUInt16LE(dateToFatDate(date), off + 14); // last mod file date
-    buf.writeUInt32LE(data ? crc32_ts_1.default(data, true) : 0x00000000, off + 16); // crc-32
+    buf.writeUInt32LE(data ? (0, crc32_ts_1.default)(data, true) : 0x00000000, off + 16); // crc-32
     buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 20); // compressed size
     buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 24); // uncompressed size
     buf.writeUInt16LE(pathLength, off + 28); // file name length
@@ -217,7 +217,7 @@ class Zip {
      * @param date Last modification date and time
      */
     addEntry(path, date, data) {
-        this.entries.push({ path, data, date, compressedData: data ? zlib_1.deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32_ts_1.default(data, true) : 0, localFileHeaderOffset: 0 });
+        this.entries.push({ path, data, date, compressedData: data ? (0, zlib_1.deflateRawSync)(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? (0, crc32_ts_1.default)(data, true) : 0, localFileHeaderOffset: 0 });
     }
     /**
      * Generate a zip buffer based on all previously added entries
@@ -261,7 +261,7 @@ class Zip {
      * @param path Path where the new zip file should be stored
      */
     write(path) {
-        fs_1.writeFileSync(path, this.build());
+        (0, fs_1.writeFileSync)(path, this.build());
     }
 }
 exports.Zip = Zip;

@@ -68,7 +68,7 @@ function unzipEntry(zip, buf, off) {
     // console.log('  - Extra field:', '0x' + buf.toString('hex', off, off + r))
     const comprData = Buffer.alloc(comprDataSize);
     buf.copy(comprData, 0, off, off + comprDataSize);
-    const data = zlib_1.inflateRawSync(comprData);
+    const data = (0, zlib_1.inflateRawSync)(comprData);
     zip.addEntry(path, mtime, data);
     return off + comprDataSize;
 }

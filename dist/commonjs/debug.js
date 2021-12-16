@@ -43,7 +43,7 @@ function debugLocalFileHeader(buf, off) {
     off += 2;
     r = buf.readUInt16LE(off);
     off += 2;
-    console.log('  - Last modification:', unzip_1.fatDateTimeToJsDate(r, fatTime));
+    console.log('  - Last modification:', (0, unzip_1.fatDateTimeToJsDate)(r, fatTime));
     r = buf.readUInt32LE(off);
     off += 4;
     console.log('  - CRC-32:', '0x' + r.toString(16));
@@ -149,7 +149,7 @@ function debugCentralDirectory(buf, off) {
     off += 2;
     r = buf.readUInt16LE(off);
     off += 2;
-    console.log('  - Last modification date:', unzip_1.fatDateTimeToJsDate(r, fatTime));
+    console.log('  - Last modification date:', (0, unzip_1.fatDateTimeToJsDate)(r, fatTime));
     r = buf.readUInt32LE(off);
     off += 4;
     console.log('  - CRC-32:', '0x' + r.toString(16));
