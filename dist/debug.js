@@ -1,4 +1,4 @@
-import { fatDateTimeToJsDate } from './unzip';
+import { fatDateTimeToJsDate } from './unzip.js';
 /*
 +------------------------------------------+---------+
 | local file header signature (0x04034b50) | 4 bytes |

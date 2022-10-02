@@ -12,7 +12,7 @@ specifiers:
   typescript: ^4.8.4
 
 dependencies:
-  crc32-ts: github.com/cloudacy/crc32-ts/698db64b9edf2b7f12701d6196e7385c97772cea
+  crc32-ts: github.com/cloudacy/crc32-ts/c5380ef586d505f23cdbe9a8e6d15ffa2f441ddd
 
 devDependencies:
   '@types/chai': 4.3.3
@@ -716,8 +716,9 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  github.com/cloudacy/crc32-ts/698db64b9edf2b7f12701d6196e7385c97772cea:
-    resolution: {tarball: https://codeload.github.com/cloudacy/crc32-ts/tar.gz/698db64b9edf2b7f12701d6196e7385c97772cea}
+  github.com/cloudacy/crc32-ts/c5380ef586d505f23cdbe9a8e6d15ffa2f441ddd:
+    resolution: {tarball: https://codeload.github.com/cloudacy/crc32-ts/tar.gz/c5380ef586d505f23cdbe9a8e6d15ffa2f441ddd}
     name: crc32-ts
-    version: 1.0.6
+    version: 2.0.0
+    engines: {node: '>=14.16'}
     dev: false

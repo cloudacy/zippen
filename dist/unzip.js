@@ -1,12 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.unzip = exports.unzipEntry = exports.fatDateTimeToJsDate = void 0;
-const zlib_1 = require("zlib");
-const zip_1 = require("./zip");
-function fatDateTimeToJsDate(date, time) {
+import { inflateRawSync } from 'zlib';
+import { Zip } from './zip.js';
+export function fatDateTimeToJsDate(date, time) {
     return new Date(((date & 0xfe00) >> 9) + 1980, ((date & 0x01e0) >> 5) - 1, date & 0x001f, (time & 0xf800) >> 11, (time & 0x07e0) >> 5, (time & 0x001f) << 1);
 }
-exports.fatDateTimeToJsDate = fatDateTimeToJsDate;
 /*
 +------------------------------------------+---------+
 | local file header signature (0x04034b50) | 4 bytes |
@@ -24,7 +20,7 @@ exports.fatDateTimeToJsDate = fatDateTimeToJsDate;
 | extra field                              | x bytes |
 +------------------------------------------+---------+
 */
-function unzipEntry(zip, buf, off) {
+export function unzipEntry(zip, buf, off) {
     let r = 0;
     r = buf.readUInt16LE(off);
     off += 2;
@@ -68,13 +64,12 @@ function unzipEntry(zip, buf, off) {
     // console.log('  - Extra field:', '0x' + buf.toString('hex', off, off + r))
     const comprData = Buffer.alloc(comprDataSize);
     buf.copy(comprData, 0, off, off + comprDataSize);
-    const data = (0, zlib_1.inflateRawSync)(comprData);
+    const data = inflateRawSync(comprData);
     zip.addEntry(path, mtime, data);
     return off + comprDataSize;
 }
-exports.unzipEntry = unzipEntry;
-function unzip(buf) {
-    const zip = new zip_1.Zip();
+export function unzip(buf) {
+    const zip = new Zip();
     let off = 0;
     let r = 0;
     while (off < buf.byteLength) {
@@ -89,5 +84,4 @@ function unzip(buf) {
     }
     return zip;
 }
-exports.unzip = unzip;
 //# sourceMappingURL=unzip.js.map

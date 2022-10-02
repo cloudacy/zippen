@@ -3,16 +3,16 @@
   "version": "1.0.6",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@cloudacy.com>, Patrick Kuen <p.kuen@cloudacy.com>",
-  "main": "dist/commonjs/index.js",
-  "module": "dist/es6/index.js",
-  "types": "dist/es6/index.d.ts",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
+  "type": "module",
   "publishConfig": {
     "registry": "https://cpm.cloudacy.io"
   },
   "scripts": {
-    "build": "tsc -m ES6 --outDir dist/es6 && tsc -m commonjs --outDir dist/commonjs",
-    "test": "mocha -r ts-node/register ./test/*.spec.ts",
+    "build": "tsc",
+    "test": "mocha ./test/*.spec.ts",
     "pretty": "prettier --write '*.{ts,json}' 'src/**/*.ts' 'test/**/*.ts'"
   },
   "dependencies": {

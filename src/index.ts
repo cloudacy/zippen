@@ -1,2 +1,2 @@
-export * from './zip'
-export * from './unzip'
+export * from './zip.js'
+export * from './unzip.js'

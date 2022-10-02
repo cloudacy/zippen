@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Zip = exports.endCentralDirectory = exports.centralDirectory = exports.dataDescriptor = exports.localFileHeader = exports.dateToFatTime = exports.dateToFatDate = void 0;
-const zlib_1 = require("zlib");
-const crc32_ts_1 = require("crc32-ts");
-const fs_1 = require("fs");
+import { deflateRawSync } from 'zlib';
+import crc32 from 'crc32-ts';
+import { writeFileSync } from 'fs';
 const fixedLocalFileHeaderLength = 30;
 const fixedDataDescriptorLength = 16;
 const fixedCentralDirectoryLength = 46;
@@ -15,10 +12,9 @@ const fixedEndCentralDirectoryLength = 22;
  * @param date The date object to be encoded
  * @returns Encoded date of the given date object
  */
-function dateToFatDate(date) {
+export function dateToFatDate(date) {
     return date.getDate() | ((date.getMonth() + 1) << 5) | ((date.getFullYear() - 1980) << 9);
 }
-exports.dateToFatDate = dateToFatDate;
 /**
  * Encodes given date to the MSDOS Time format.
  * Details: https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
@@ -26,10 +22,9 @@ exports.dateToFatDate = dateToFatDate;
  * @param date The date object to be encoded
  * @returns Encoded time of the given date object
  */
-function dateToFatTime(date) {
+export function dateToFatTime(date) {
     return (date.getSeconds() >> 1) | (date.getMinutes() << 5) | (date.getHours() << 11);
 }
-exports.dateToFatTime = dateToFatTime;
 /*
 +------------------------------------------+---------+
 | local file header signature (0x04034b50) | 4 bytes |
@@ -58,14 +53,14 @@ exports.dateToFatTime = dateToFatTime;
  * @param data A buffer holding ONLY the uncompressed data
  * @param compressedData A buffer holding ONLY the compressed data
  */
-function localFileHeader(buf, off, path, pathLength, date, data, compressedData) {
+export function localFileHeader(buf, off, path, pathLength, date, data, compressedData) {
     buf.writeUInt32LE(0x04034b50, off);
     buf.writeUInt16LE(20, off + 4); // version needed to extract: 2.0 = DEFLATE compression
     buf.writeUInt16LE(0x0000, off + 6); // general purpose big flags: 3 = use data descriptor, 11 = name/comment UTF-8 encoded
     buf.writeUInt16LE(0x0008, off + 8); // compression method: 8 = DEFLATE
     buf.writeUInt16LE(dateToFatTime(date), off + 10); // last modified time
     buf.writeUInt16LE(dateToFatDate(date), off + 12); // last modified date
-    buf.writeUInt32LE(data ? (0, crc32_ts_1.default)(data, true) : 0x00000000, off + 14); // crc-32 (0x0 -> will be set at data descriptor)
+    buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 14); // crc-32 (0x0 -> will be set at data descriptor)
     buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 18); // compressed size (0x0 -> will be set at data descriptor)
     buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 22); // uncompressed size (0x0 -> will be set at data descriptor)
     buf.writeUInt16LE(pathLength, off + 26); // file name length
@@ -73,7 +68,6 @@ function localFileHeader(buf, off, path, pathLength, date, data, compressedData)
     buf.write(path, off + 30, pathLength, 'utf-8'); // file name
     return fixedLocalFileHeaderLength + pathLength;
 }
-exports.localFileHeader = localFileHeader;
 /*
 data needs to be the UNCOMPRESSED content of the file to add
 
@@ -92,14 +86,13 @@ data needs to be the UNCOMPRESSED content of the file to add
  * @param data A buffer holding ONLY the uncompressed data
  * @param compressedData A buffer holding ONLY the compressed data
  */
-function dataDescriptor(buf, off, data, compressedData) {
+export function dataDescriptor(buf, off, data, compressedData) {
     buf.writeUInt32LE(0x08074b50, off);
-    buf.writeUInt32LE(data ? (0, crc32_ts_1.default)(data, true) : 0x00000000, off + 4); // crc32
+    buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 4); // crc32
     buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 8); // compressed size
     buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 12); // uncompressed size
     return fixedDataDescriptorLength;
 }
-exports.dataDescriptor = dataDescriptor;
 /*
 +-------------------------------------------+---------+
 | archive extra data signature (0x08064b50) | 4 bytes |
@@ -148,7 +141,7 @@ exports.dataDescriptor = dataDescriptor;
  * @param data A buffer holding ONLY the uncompressed data
  * @param compressedData A buffer holding ONLY the compressed data
  */
-function centralDirectory(buf, off, path, pathLength, date, localFileHeaderOffset, data, compressedData) {
+export function centralDirectory(buf, off, path, pathLength, date, localFileHeaderOffset, data, compressedData) {
     buf.writeUInt32LE(0x02014b50, off); // central file header signature
     buf.writeUInt16LE(45, off + 4); // version made by: TODO
     buf.writeUInt16LE(20, off + 6); // version needed to extract: 2.0 = DEFLATE compression
@@ -156,7 +149,7 @@ function centralDirectory(buf, off, path, pathLength, date, localFileHeaderOffse
     buf.writeUInt16LE(0x0008, off + 10); // compression method: 8 = DEFLATE
     buf.writeUInt16LE(dateToFatTime(date), off + 12); // last mod file time
     buf.writeUInt16LE(dateToFatDate(date), off + 14); // last mod file date
-    buf.writeUInt32LE(data ? (0, crc32_ts_1.default)(data, true) : 0x00000000, off + 16); // crc-32
+    buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 16); // crc-32
     buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 20); // compressed size
     buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 24); // uncompressed size
     buf.writeUInt16LE(pathLength, off + 28); // file name length
@@ -169,7 +162,6 @@ function centralDirectory(buf, off, path, pathLength, date, localFileHeaderOffse
     buf.write(path, off + 46, pathLength, 'utf-8'); // file name
     return fixedCentralDirectoryLength + pathLength;
 }
-exports.centralDirectory = centralDirectory;
 /*
 +-------------------------------------------------------------------------------+---------+
 | end of central dir signature (0x06054b50)                                     | 4 bytes |
@@ -191,7 +183,7 @@ exports.centralDirectory = centralDirectory;
  * @param entryCount The total number of entries stored in the zip container
  * @param entriesLength TODO
  */
-function endCentralDirectory(buf, off, entries, entriesLength) {
+export function endCentralDirectory(buf, off, entries, entriesLength) {
     buf.writeUInt32LE(0x06054b50, off); // end of central dir signature
     buf.writeUInt16LE(0x0000, off + 4); // number of this disk
     buf.writeUInt16LE(0x0000, off + 6); // number of the disk with the start of the central directory
@@ -203,12 +195,10 @@ function endCentralDirectory(buf, off, entries, entriesLength) {
     // no comment
     return fixedEndCentralDirectoryLength;
 }
-exports.endCentralDirectory = endCentralDirectory;
-class Zip {
-    constructor() {
-        this.entries = [];
-        this.offset = 0;
-    }
+export class Zip {
+    buffer;
+    entries = [];
+    offset = 0;
     /**
      * Add an entry (file / directory) to the zip file
      *
@@ -217,7 +207,7 @@ class Zip {
      * @param date Last modification date and time
      */
     addEntry(path, date, data) {
-        this.entries.push({ path, data, date, compressedData: data ? (0, zlib_1.deflateRawSync)(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? (0, crc32_ts_1.default)(data, true) : 0, localFileHeaderOffset: 0 });
+        this.entries.push({ path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data, true) : 0, localFileHeaderOffset: 0 });
     }
     /**
      * Generate a zip buffer based on all previously added entries
@@ -261,8 +251,7 @@ class Zip {
      * @param path Path where the new zip file should be stored
      */
     write(path) {
-        (0, fs_1.writeFileSync)(path, this.build());
+        writeFileSync(path, this.build());
     }
 }
-exports.Zip = Zip;
 //# sourceMappingURL=zip.js.map

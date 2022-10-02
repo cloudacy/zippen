@@ -1,6 +1,6 @@
 import {inflateRawSync} from 'zlib'
 
-import {Zip} from './zip'
+import {Zip} from './zip.js'
 
 export function fatDateTimeToJsDate(date: number, time: number): Date {
   return new Date(((date & 0xfe00) >> 9) + 1980, ((date & 0x01e0) >> 5) - 1, date & 0x001f, (time & 0xf800) >> 11, (time & 0x07e0) >> 5, (time & 0x001f) << 1)

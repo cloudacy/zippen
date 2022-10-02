@@ -1,4 +1,4 @@
-/// <reference types="node" />
+/// <reference types="node" resolution-mode="require"/>
 /**
  * Prints out a readable version of the current local file header from the given zip file buffer.
  *
