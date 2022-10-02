@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Zip = exports.endCentralDirectory = exports.centralDirectory = exports.dataDescriptor = exports.localFileHeader = exports.dateToFatTime = exports.dateToFatDate = void 0;
 const zlib_1 = require("zlib");

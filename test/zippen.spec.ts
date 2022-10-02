@@ -1,5 +1,3 @@
-'use strict'
-
 import {inflateRawSync, deflateRawSync} from 'zlib'
 import {expect} from 'chai'
 

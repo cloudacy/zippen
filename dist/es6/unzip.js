@@ -1,4 +1,3 @@
-'use strict';
 import { inflateRawSync } from 'zlib';
 import { Zip } from './zip';
 export function fatDateTimeToJsDate(date, time) {
