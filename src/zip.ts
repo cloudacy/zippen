@@ -1,5 +1,5 @@
 import {deflateRawSync} from 'zlib'
-import crc32 from 'crc32-ts'
+import {buf as crc32} from 'crc-32'
 import {writeFileSync} from 'fs'
 
 export type ZipEntry = {
@@ -74,7 +74,7 @@ export function localFileHeader(buf: Buffer, off: number, path: string, pathLeng
   buf.writeUInt16LE(0x0008, off + 8) // compression method: 8 = DEFLATE
   buf.writeUInt16LE(dateToFatTime(date), off + 10) // last modified time
   buf.writeUInt16LE(dateToFatDate(date), off + 12) // last modified date
-  buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 14) // crc-32 (0x0 -> will be set at data descriptor)
+  buf.writeUInt32LE(data ? crc32(data) : 0x00000000, off + 14) // crc-32 (0x0 -> will be set at data descriptor)
   buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 18) // compressed size (0x0 -> will be set at data descriptor)
   buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 22) // uncompressed size (0x0 -> will be set at data descriptor)
   buf.writeUInt16LE(pathLength, off + 26) // file name length
@@ -104,7 +104,7 @@ data needs to be the UNCOMPRESSED content of the file to add
  */
 export function dataDescriptor(buf: Buffer, off: number, data?: Buffer, compressedData?: Buffer) {
   buf.writeUInt32LE(0x08074b50, off)
-  buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 4) // crc32
+  buf.writeUInt32LE(data ? crc32(data) : 0x00000000, off + 4) // crc32
   buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 8) // compressed size
   buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 12) // uncompressed size
 
@@ -168,7 +168,7 @@ export function centralDirectory(buf: Buffer, off: number, path: string, pathLen
   buf.writeUInt16LE(0x0008, off + 10) // compression method: 8 = DEFLATE
   buf.writeUInt16LE(dateToFatTime(date), off + 12) // last mod file time
   buf.writeUInt16LE(dateToFatDate(date), off + 14) // last mod file date
-  buf.writeUInt32LE(data ? crc32(data, true) : 0x00000000, off + 16) // crc-32
+  buf.writeUInt32LE(data ? crc32(data) : 0x00000000, off + 16) // crc-32
   buf.writeUInt32LE(compressedData ? compressedData.byteLength : 0x00000000, off + 20) // compressed size
   buf.writeUInt32LE(data ? data.byteLength : 0x00000000, off + 24) // uncompressed size
   buf.writeUInt16LE(pathLength, off + 28) // file name length
@@ -231,7 +231,7 @@ export class Zip {
    * @param date Last modification date and time
    */
   addEntry(path: string, date: Date, data: Buffer | undefined) {
-    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data, true) : 0, localFileHeaderOffset: 0})
+    this.entries.push({path, data, date, compressedData: data ? deflateRawSync(data) : undefined, pathByteLength: Buffer.from(path).byteLength, crc: data ? crc32(data) : 0, localFileHeaderOffset: 0})
   }
 
   /**

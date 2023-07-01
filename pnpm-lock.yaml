@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  crc32-ts:
-    specifier: github:cloudacy/crc32-ts
-    version: github.com/cloudacy/crc32-ts/c5380ef586d505f23cdbe9a8e6d15ffa2f441ddd
+  crc-32:
+    specifier: ^1.2.2
+    version: 1.2.2
 
 devDependencies:
   '@types/chai':
@@ -240,6 +240,12 @@ packages:
   /concat-map@0.0.1:
     resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
     dev: true
+
+  /crc-32@1.2.2:
+    resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
+    engines: {node: '>=0.8'}
+    hasBin: true
+    dev: false
 
   /create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
@@ -726,10 +732,3 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
-
-  github.com/cloudacy/crc32-ts/c5380ef586d505f23cdbe9a8e6d15ffa2f441ddd:
-    resolution: {tarball: https://codeload.github.com/cloudacy/crc32-ts/tar.gz/c5380ef586d505f23cdbe9a8e6d15ffa2f441ddd}
-    name: crc32-ts
-    version: 2.0.0
-    engines: {node: '>=14.16'}
-    dev: false
