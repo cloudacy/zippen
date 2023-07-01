@@ -1,5 +1,5 @@
 import {inflateRawSync, deflateRawSync} from 'zlib'
-import {expect} from 'chai'
+import {describe, it, expect} from 'vitest'
 
 import {Zip} from '../src/zip.js'
 import {unzip} from '../src/unzip.js'
