@@ -1,6 +1,6 @@
 {
   "name": "zippen",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "license": "MIT",
   "author": "Dominik Kuen <d.kuen@cloudacy.com>, Patrick Kuen <p.kuen@cloudacy.com>",
   "exports": "./dist/index.js",
