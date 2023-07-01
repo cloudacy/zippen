@@ -1,5 +1,5 @@
 /// <reference types="node" resolution-mode="require"/>
-export declare type ZipEntry = {
+export type ZipEntry = {
     path: string;
     date: Date;
     data?: Buffer;
