@@ -1,5 +1,5 @@
 import {deflateRawSync} from 'zlib'
-import {buf as crc32} from 'crc-32'
+import crc32 from 'crc-32'
 import {writeFileSync} from 'fs'
 
 export type ZipEntry = {
@@ -17,7 +17,7 @@ const fixedDataDescriptorLength = 16
 const fixedCentralDirectoryLength = 46
 const fixedEndCentralDirectoryLength = 22
 
-const unsignedCrc32 = (data: Buffer) => crc32(data) >>> 0
+const unsignedCrc32 = (data: Buffer) => crc32.buf(data) >>> 0
 
 /**
  * Encodes given date to a the MSDOS Date format.

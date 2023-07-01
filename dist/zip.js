@@ -1,11 +1,11 @@
 import { deflateRawSync } from 'zlib';
-import { buf as crc32 } from 'crc-32';
+import crc32 from 'crc-32';
 import { writeFileSync } from 'fs';
 const fixedLocalFileHeaderLength = 30;
 const fixedDataDescriptorLength = 16;
 const fixedCentralDirectoryLength = 46;
 const fixedEndCentralDirectoryLength = 22;
-const unsignedCrc32 = (data) => crc32(data) >>> 0;
+const unsignedCrc32 = (data) => crc32.buf(data) >>> 0;
 /**
  * Encodes given date to a the MSDOS Date format.
  * Details: https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-filetimetodosdatetime
