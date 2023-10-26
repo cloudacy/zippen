@@ -19,10 +19,10 @@
     "crc-32": "^1.2.2"
   },
   "devDependencies": {
-    "@types/node": "^20.3.3",
+    "@types/node": "^20.8.9",
     "prettier": "^2.8.8",
-    "typescript": "^5.1.6",
-    "vitest": "^0.32.2"
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6"
   },
   "prettier": {
     "printWidth": 999,
