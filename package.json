@@ -1,14 +1,14 @@
 {
-  "name": "zippen",
+  "name": "@cloudacy/zippen",
   "version": "2.1.1",
   "license": "MIT",
-  "author": "Dominik Kuen <d.kuen@cloudacy.com>, Patrick Kuen <p.kuen@cloudacy.com>",
+  "author": "Dominik Kuen <d.kuen@cloudacy.com>",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "type": "module",
   "publishConfig": {
-    "registry": "https://cpm.cloudacy.io"
+    "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
     "build": "tsc",
@@ -34,5 +34,22 @@
     "bracketSpacing": false,
     "arrowParens": "avoid",
     "proseWrap": "never"
-  }
+  },
+  "description": "`zippen` is a small and easy to use zip generator. It can be used to pack multiple files / buffers into one .zip file / buffer.",
+  "main": "./dist/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cloudacy/zippen.git"
+  },
+  "keywords": [
+    "zip",
+    "unzip"
+  ],
+  "bugs": {
+    "url": "https://github.com/cloudacy/zippen/issues"
+  },
+  "homepage": "https://github.com/cloudacy/zippen#readme"
 }
