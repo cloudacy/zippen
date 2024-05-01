@@ -11,11 +11,12 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out the repository under $GITHUB_WORKSPACE, so it can be accessed
-      - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v1.2.1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          version: 5.10.4
+          node-version: '20'
+          registry-url: https://npm.pkg.github.com/
       - name: Start the linter
         run: |
-          pnpm install
-          pnpm run test
+          npm install
+          npm run test
