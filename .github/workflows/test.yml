@@ -16,7 +16,23 @@ jobs:
         with:
           node-version: '20'
           registry-url: https://npm.pkg.github.com/
-      - name: Start the linter
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+      - name: Get pnpm store directory
+        shell: bash
         run: |
-          npm install
-          npm run test
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      - name: Start the test
+        run: |
+          pnpm install
+          pnpm test

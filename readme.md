@@ -9,16 +9,19 @@ This package was built based on the [**pkware .ZIP File Format Specification**](
 ### import
 
 #### commonjs
+
 ```javascript
-const Zip = require('zippen').Zip
+const Zip = require('@cloudacy/zippen').Zip
 ```
 
 #### es6 module
+
 ```javascript
-import {Zip} from 'zippen'
+import {Zip} from '@cloudacy/zippen'
 ```
 
 ### create zip object
+
 ```javascript
 const zip = new Zip()
 ```
@@ -26,6 +29,7 @@ const zip = new Zip()
 ### add entries to the zip
 
 ##### arguments
+
 - path - `string`: The location of the file to be stored in the .zip file (may also contain directories: e.g. `foo/bar.txt`)
 - last modified date - `Date`: A date object, holding the last modified date of the file or directory
 - data - `Buffer | undefined`: If the entry is a file, this should be a buffer, holding the uncompressed data. If it is a directory, pass `undefined` here.
@@ -47,6 +51,7 @@ zip.build()
 `write` will store the resulting .zip file at the given file path.
 
 ##### arguments
+
 - path - `string | number | Buffer | URL`: The location of the resulting .zip file.
 
 ```javascript
@@ -54,6 +59,7 @@ zip.write('foo.zip')
 ```
 
 ## example
+
 ```javascript
 const zip = new Zip()
 zip.addEntry('foo.txt', new Date(), Buffer.from('bar'))
